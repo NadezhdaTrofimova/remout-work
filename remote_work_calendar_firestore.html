@@ -1,0 +1,468 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--c-bg:#F5F3EE;
+--c-surface:#FFFFFF;
+--c-border:#E2DED5;
+--c-text:#1A1917;
+--c-muted:#6B6860;
+--c-accent:#2563EB;
+--c-accent-light:#EFF6FF;
+--c-holiday:#FEF2F2;
+--c-holiday-text:#991B1B;
+--c-weekend:#FFF7ED;
+--c-weekend-text:#C2410C;
+--font-display:'Unbounded',sans-serif;
+--font-body:'Golos Text',sans-serif;
+}
+body{font-family:var(--font-body);background:var(--c-bg);color:var(--c-text);min-height:100vh}
+.app{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+.header-left{display:flex;align-items:center;gap:1rem}
+.logo{font-family:var(--font-display);font-size:1.1rem;font-weight:700;letter-spacing:-0.02em;color:var(--c-text)}
+.logo span{color:var(--c-accent)}
+.badge-readonly{background:#FEF3C7;color:#92400E;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block;margin-right:4px;transition:background 0.3s}
+.status-dot.online{background:#22C55E}
+.status-dot.error{background:#EF4444}
+.status-label{font-size:12px;color:var(--c-muted)}
+.nav{display:flex;align-items:center;gap:0.5rem}
+.nav-month{font-family:var(--font-display);font-size:1.1rem;font-weight:700;min-width:220px;text-align:center;letter-spacing:-0.02em}
+.nav-btn{background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;transition:all 0.15s;color:var(--c-text)}
+.nav-btn:hover{background:var(--c-accent);color:#fff;border-color:var(--c-accent)}
+.share-btn{background:var(--c-accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:all 0.15s}
+.share-btn:hover{background:#1D4ED8}
+.calendar-grid{background:var(--c-surface);border-radius:16px;border:1px solid var(--c-border);overflow:hidden}
+.week-header{display:grid;grid-template-columns:48px repeat(7,1fr);border-bottom:1px solid var(--c-border)}
+.wh-num{padding:10px 0;text-align:center;font-size:11px;font-weight:600;color:var(--c-muted);letter-spacing:0.08em;text-transform:uppercase;border-right:1px solid var(--c-border)}
+.wh-day{padding:10px 0;text-align:center;font-size:11px;font-weight:600;color:var(--c-muted);letter-spacing:0.08em;text-transform:uppercase}
+.wh-day:nth-child(7),.wh-day:nth-child(8){color:var(--c-weekend-text)}
+.week-row{display:grid;grid-template-columns:48px repeat(7,1fr)}
+.week-num-cell{display:flex;align-items:flex-start;justify-content:center;padding:8px 4px;font-size:11px;color:var(--c-muted);font-weight:600;border-right:1px solid var(--c-border);background:#FAFAF8;border-bottom:1px solid var(--c-border)}
+.day-cell{border-bottom:1px solid var(--c-border);border-left:1px solid var(--c-border);padding:6px 7px;min-height:80px;cursor:pointer;transition:background 0.1s;position:relative}
+.day-cell:hover:not(.empty):not(.readonly){background:#F0F4FF}
+.day-cell.empty{background:#FAFAF8;cursor:default}
+.day-cell.weekend{background:var(--c-weekend)}
+.day-cell.holiday{background:var(--c-holiday)}
+.day-cell.holiday .day-num{color:var(--c-holiday-text)}
+.day-cell.today .day-num{background:var(--c-accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.day-num{font-size:13px;font-weight:600;margin-bottom:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.day-cell.weekend .day-num{color:var(--c-weekend-text)}
+.holiday-label{font-size:9px;color:var(--c-holiday-text);font-weight:600;line-height:1.3;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
+.person-chips{display:flex;flex-direction:column;gap:3px}
+.chip{border-radius:5px;padding:2px 6px;font-size:11px;font-weight:500;line-height:1.4}
+.chip.p0{background:#DBEAFE;color:#1E40AF}
+.chip.p1{background:#D1FAE5;color:#065F46}
+.chip.p2{background:#EDE9FE;color:#4C1D95}
+.saving-overlay{position:absolute;inset:0;background:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;border-radius:2px;font-size:10px;color:var(--c-muted)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal{background:var(--c-surface);border-radius:16px;padding:1.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+.modal-title{font-family:var(--font-display);font-size:1rem;font-weight:700;margin-bottom:0.25rem;letter-spacing:-0.02em}
+.modal-date{color:var(--c-muted);font-size:13px;margin-bottom:1.25rem}
+.persons-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem}
+.person-row{display:flex;align-items:center;gap:10px}
+.person-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.pa0{background:#DBEAFE;color:#1E40AF}
+.pa1{background:#D1FAE5;color:#065F46}
+.pa2{background:#EDE9FE;color:#4C1D95}
+.person-name{font-size:14px;font-weight:500;flex:1}
+.toggle-btn{border:1.5px solid var(--c-border);background:transparent;border-radius:8px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:var(--font-body)}
+.toggle-btn.active{background:var(--c-accent);border-color:var(--c-accent);color:#fff}
+.toggle-btn:not(.active){color:var(--c-muted)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.btn-cancel{background:transparent;border:1px solid var(--c-border);border-radius:8px;padding:8px 18px;cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--c-muted)}
+.btn-save{background:var(--c-accent);border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;color:#fff;display:flex;align-items:center;gap:6px}
+.btn-cancel:hover{background:var(--c-bg)}
+.btn-save:hover{background:#1D4ED8}
+.btn-save:disabled{background:#93C5FD;cursor:not-allowed}
+.share-modal{max-width:480px}
+.share-url-box{background:#F8F7F4;border:1px solid var(--c-border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--c-muted);word-break:break-all;margin:12px 0;font-family:monospace;line-height:1.6}
+.copy-btn{background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:7px 16px;cursor:pointer;font-family:var(--font-body);font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s}
+.copy-btn:hover{background:var(--c-accent);color:#fff;border-color:var(--c-accent)}
+.copy-success{color:#065F46;font-size:12px;font-weight:500;margin-top:6px;display:none}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;font-size:12px;color:var(--c-muted);align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+.ld-holiday{background:#FECACA;border:1px solid #FCA5A5}
+.ld-weekend{background:#FED7AA;border:1px solid #FDBA74}
+.ld-today{background:var(--c-accent);border-radius:50%}
+.spinner{width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:640px){
+.app{padding:0.75rem 0.5rem}
+.nav-month{font-size:0.85rem;min-width:150px}
+.logo{font-size:0.9rem}
+.week-header,.week-row{grid-template-columns:32px repeat(7,1fr)}
+.week-num-cell{padding:4px 2px;font-size:10px}
+.day-cell{min-height:60px;padding:4px 3px}
+.day-num{font-size:11px}
+.chip{font-size:9px;padding:1px 4px}
+.holiday-label{font-size:8px}
+.share-btn span{display:none}
+.nav-month{font-size:0.8rem;min-width:140px}
+}
+@media(max-width:420px){
+.week-header,.week-row{grid-template-columns:28px repeat(7,1fr)}
+.day-cell{min-height:52px}
+.chip{display:none}
+.day-cell.has-people::after{content:'•';position:absolute;bottom:3px;right:4px;color:var(--c-accent);font-size:14px;font-weight:700}
+}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+
+<div class="app">
+<div class="header">
+  <div class="header-left">
+    <div class="logo">Ремоут<span>.</span>Работа</div>
+    <div id="readonly-badge" class="badge-readonly" style="display:none">👁 Только просмотр</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span class="status-dot" id="status-dot"></span>
+    <span class="status-label" id="status-label">Подключение...</span>
+  </div>
+  <div class="nav">
+    <button class="nav-btn" id="prev-btn">‹</button>
+    <div class="nav-month" id="month-label"></div>
+    <button class="nav-btn" id="next-btn">›</button>
+  </div>
+  <button class="share-btn" id="share-btn-el">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    <span>Поделиться</span>
+  </button>
+</div>
+
+<div class="calendar-grid" id="calendar-grid">
+  <div class="week-header">
+    <div class="wh-num">Нед.</div>
+    <div class="wh-day">Пн</div>
+    <div class="wh-day">Вт</div>
+    <div class="wh-day">Ср</div>
+    <div class="wh-day">Чт</div>
+    <div class="wh-day">Пт</div>
+    <div class="wh-day">Сб</div>
+    <div class="wh-day">Вс</div>
+  </div>
+  <div id="calendar-body"></div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot ld-holiday"></div> Праздник</div>
+  <div class="legend-item"><div class="legend-dot ld-weekend"></div> Выходной</div>
+  <div class="legend-item"><div class="legend-dot ld-today"></div> Сегодня</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#84b8fc"></div> Трофимова Н.А.</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#b7f6c4"></div> Дресвянникова А.А.</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#bc87fd"></div> Дубровина Е.С.</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="day-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Кто на удаленке?</div>
+    <div class="modal-date" id="modal-date"></div>
+    <div class="persons-list">
+      <div class="person-row">
+        <div class="person-avatar pa0">НТ</div>
+        <div class="person-name">Надя</div>
+        <button class="toggle-btn" data-idx="0" id="toggle-0">Удаленка</button>
+      </div>
+      <div class="person-row">
+        <div class="person-avatar pa1">АД</div>
+        <div class="person-name">Настя</div>
+        <button class="toggle-btn" data-idx="1" id="toggle-1">Удаленка</button>
+      </div>
+      <div class="person-row">
+        <div class="person-avatar pa2">ЕД</div>
+        <div class="person-name">Лиза</div>
+        <button class="toggle-btn" data-idx="2" id="toggle-2">Удаленка</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">Отмена</button>
+      <button class="btn-save" id="modal-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-modal" style="display:none">
+  <div class="modal share-modal">
+    <div class="modal-title">Поделиться календарём</div>
+    <div class="modal-date">Ссылка открывается в режиме «только просмотр» — никто не сможет редактировать данные.</div>
+    <div class="share-url-box" id="share-url-display"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="copy-btn" id="copy-btn">📋 Копировать ссылку</button>
+      <div class="copy-success" id="copy-success">✓ Скопировано!</div>
+    </div>
+    <div class="modal-actions" style="margin-top:1.25rem">
+      <button class="btn-cancel" id="share-close">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDLfdOUujT9xUWKf8Qha70K7D89xbB_oig",
+  authDomain: "remout-work.firebaseapp.com",
+  projectId: "remout-work",
+  storageBucket: "remout-work.firebasestorage.app",
+  messagingSenderId: "178093090675",
+  appId: "1:178093090675:web:ad0031fcf6da3e17afc706"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const PERSONS = ['Надя','Настя','Лиза'];
+const RU_HOLIDAYS = {
+  '01-01':'Новый год','01-02':'Новогодние каникулы','01-03':'Новогодние каникулы',
+  '01-04':'Новогодние каникулы','01-05':'Новогодние каникулы','01-06':'Новогодние каникулы',
+  '01-07':'Рождество','01-08':'Новогодние каникулы','02-23':'День защитника Отечества',
+  '03-08':'Женский день','05-01':'Праздник весны и труда','05-09':'День Победы',
+  '06-12':'День России','11-04':'День нар. единства','12-31':'Новогодние каникулы'
+};
+
+const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTHS_RU_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+let state = {};
+let currentYear, currentMonth;
+let selectedDate = null;
+let tempSelected = [false,false,false];
+let unsubscribe = null;
+const isReadonly = window.location.search.includes('readonly=1') || window.location.hash.includes('readonly');
+
+function setStatus(type, text) {
+  const dot = document.getElementById('status-dot');
+  const label = document.getElementById('status-label');
+  dot.className = 'status-dot ' + type;
+  label.textContent = text;
+}
+
+function dayKey(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function getHoliday(d, m) {
+  const key = String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  return RU_HOLIDAYS[key] || null;
+}
+
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function getMonthDocId(y, m) {
+  return `${y}-${String(m+1).padStart(2,'0')}`;
+}
+
+function subscribeToMonth(y, m) {
+  if (unsubscribe) unsubscribe();
+  const docRef = doc(db, 'calendar', getMonthDocId(y, m));
+  setStatus('', 'Загрузка...');
+  unsubscribe = onSnapshot(docRef, (snap) => {
+    if (snap.exists()) {
+      state = snap.data().days || {};
+    } else {
+      state = {};
+    }
+    setStatus('online', 'Синхронизировано');
+    renderCalendar();
+  }, (err) => {
+    setStatus('error', 'Ошибка соединения');
+    console.error(err);
+  });
+}
+
+async function saveDay(key, persons) {
+  const saveBtn = document.getElementById('modal-save');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<span class="spinner"></span> Сохранение...';
+  try {
+    const docRef = doc(db, 'calendar', getMonthDocId(currentYear, currentMonth));
+    const snap = await getDoc(docRef);
+    const days = snap.exists() ? (snap.data().days || {}) : {};
+    days[key] = persons;
+    await setDoc(docRef, { days }, { merge: true });
+    setStatus('online', 'Сохранено');
+  } catch(e) {
+    setStatus('error', 'Ошибка сохранения');
+    console.error(e);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = 'Сохранить';
+  }
+}
+
+function renderCalendar() {
+  document.getElementById('month-label').textContent = MONTHS_RU[currentMonth] + ' ' + currentYear;
+  const body = document.getElementById('calendar-body');
+  body.innerHTML = '';
+
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  let startDow = firstDay.getDay();
+  if (startDow === 0) startDow = 7;
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date();
+
+  let cells = [];
+  for (let i = 1; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  for (let w = 0; w < cells.length / 7; w++) {
+    const row = document.createElement('div');
+    row.className = 'week-row';
+    const weekCells = cells.slice(w*7, w*7+7);
+    const firstReal = weekCells.find(c => c !== null);
+    let weekNum = '';
+    if (firstReal !== null) weekNum = getWeekNumber(new Date(currentYear, currentMonth, firstReal));
+
+    const numCell = document.createElement('div');
+    numCell.className = 'week-num-cell';
+    numCell.textContent = weekNum || '';
+    row.appendChild(numCell);
+
+    weekCells.forEach((d, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      if (d === null) {
+        cell.classList.add('empty');
+      } else {
+        const isWeekend = idx === 5 || idx === 6;
+        const holiday = getHoliday(d, currentMonth);
+        const isToday = d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+        if (isWeekend) cell.classList.add('weekend');
+        if (holiday) cell.classList.add('holiday');
+        if (isToday) cell.classList.add('today');
+
+        const key = dayKey(currentYear, currentMonth, d);
+        const dayData = state[key] || [false,false,false];
+        if (dayData.some(Boolean)) cell.classList.add('has-people');
+
+        const numDiv = document.createElement('div');
+        numDiv.className = 'day-num';
+        numDiv.textContent = d;
+        cell.appendChild(numDiv);
+
+        if (holiday) {
+          const hl = document.createElement('div');
+          hl.className = 'holiday-label';
+          hl.textContent = holiday.length > 18 ? holiday.slice(0,17)+'…' : holiday;
+          cell.appendChild(hl);
+        }
+
+        const chips = document.createElement('div');
+        chips.className = 'person-chips';
+        dayData.forEach((on, pi) => {
+          if (on) {
+            const chip = document.createElement('div');
+            chip.className = `chip p${pi}`;
+            chip.textContent = PERSONS[pi];
+            chips.appendChild(chip);
+          }
+        });
+        cell.appendChild(chips);
+
+        if (!isReadonly) {
+          cell.addEventListener('click', () => openDayModal(d));
+        }
+      }
+      row.appendChild(cell);
+    });
+    body.appendChild(row);
+  }
+}
+
+function openDayModal(d) {
+  selectedDate = d;
+  const key = dayKey(currentYear, currentMonth, d);
+  const dayData = state[key] || [false,false,false];
+  tempSelected = [...dayData];
+  document.getElementById('modal-date').textContent = d + ' ' + MONTHS_RU_GEN[currentMonth] + ' ' + currentYear;
+  for (let i = 0; i < 3; i++) {
+    const btn = document.getElementById('toggle-' + i);
+    btn.classList.toggle('active', tempSelected[i]);
+    btn.textContent = tempSelected[i] ? '✓ Удалёнка' : 'Удалёнка';
+  }
+  document.getElementById('day-modal').style.display = 'flex';
+}
+
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.dataset.idx);
+    tempSelected[idx] = !tempSelected[idx];
+    btn.classList.toggle('active', tempSelected[idx]);
+    btn.textContent = tempSelected[idx] ? '✓ Удалёнка' : 'Удалёнка';
+  });
+});
+
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('day-modal').style.display = 'none';
+});
+
+document.getElementById('modal-save').addEventListener('click', async () => {
+  const key = dayKey(currentYear, currentMonth, selectedDate);
+  await saveDay(key, [...tempSelected]);
+  document.getElementById('day-modal').style.display = 'none';
+});
+
+document.getElementById('day-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('day-modal'))
+    document.getElementById('day-modal').style.display = 'none';
+});
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  subscribeToMonth(currentYear, currentMonth);
+});
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  subscribeToMonth(currentYear, currentMonth);
+});
+
+document.getElementById('share-btn-el').addEventListener('click', () => {
+  const base = window.location.href.split('?')[0].split('#')[0];
+  document.getElementById('share-url-display').textContent = base + '?readonly=1';
+  document.getElementById('share-modal').style.display = 'flex';
+  document.getElementById('copy-success').style.display = 'none';
+});
+
+document.getElementById('share-close').addEventListener('click', () => {
+  document.getElementById('share-modal').style.display = 'none';
+});
+
+document.getElementById('share-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('share-modal'))
+    document.getElementById('share-modal').style.display = 'none';
+});
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const url = document.getElementById('share-url-display').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const s = document.getElementById('copy-success');
+    s.style.display = 'block';
+    setTimeout(() => s.style.display = 'none', 2500);
+  });
+});
+
+if (isReadonly) {
+  document.getElementById('readonly-badge').style.display = 'flex';
+  document.getElementById('share-btn-el').style.display = 'none';
+}
+
+const now = new Date();
+currentYear = now.getFullYear();
+currentMonth = now.getMonth();
+subscribeToMonth(currentYear, currentMonth);
+</script>
