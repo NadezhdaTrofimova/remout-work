@@ -115,8 +115,15 @@ body{font-family:var(--font-body);background:var(--c-bg);color:var(--c-text);min
 @media(max-width:400px){
 .day-cell{min-height:46px;padding:2px 2px}
 .chip{font-size:7px;padding:1px 2px}
-.day-cell.has-people .chip{display:none}
-.day-cell.has-people::after{content:'•';position:absolute;bottom:2px;right:3px;color:var(--c-accent);font-size:13px;font-weight:700}
+.chip{display:none}
+.dots-row{display:none}
+@media(max-width:400px){
+.dots-row{display:flex;gap:2px;justify-content:center;position:absolute;bottom:2px;left:0;right:0}
+.dot{width:5px;height:5px;border-radius:50%}
+.dot.d0{background:#84b8fc}
+.dot.d1{background:#6fcf7a}
+.dot.d2{background:#bc87fd}
+}
 }
 </style>
 
@@ -355,7 +362,7 @@ function renderCalendar() {
 
         const key = dayKey(currentYear, currentMonth, d);
         const dayData = state[key] || [false,false,false];
-        if (dayData.some(Boolean)) cell.classList.add('has-people');
+        dayData.forEach((on, pi) => { if (on) cell.classList.add('has-p'+pi); });
 
         const numDiv = document.createElement('div');
         numDiv.className = 'day-num';
@@ -380,6 +387,17 @@ function renderCalendar() {
           }
         });
         cell.appendChild(chips);
+
+        const dotsRow = document.createElement('div');
+        dotsRow.className = 'dots-row';
+        dayData.forEach((on, pi) => {
+          if (on) {
+            const dot = document.createElement('div');
+            dot.className = `dot d${pi}`;
+            dotsRow.appendChild(dot);
+          }
+        });
+        cell.appendChild(dotsRow);
 
         if (!isReadonly) {
           cell.addEventListener('click', () => openDayModal(d));
